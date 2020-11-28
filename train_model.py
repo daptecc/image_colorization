@@ -1,12 +1,12 @@
-from utils import update_losses, visualize, log_results
+import glob, time, argparse
+from utils import create_loss_meters, update_losses, visualize, log_results
 from main_model import MainModel
 from colorization_dataset import make_dataloaders
 from tqdm.notebook import tqdm
-import argparse
 import numpy as np
 from fastai.data.external import untar_data, URLs
 
-def train_model(model, train_dl, epochs, display_every=200):
+def train_model(model, train_dl, epochs, display_every=200, visualize_dir):
     data = next(iter(val_dl)) # getting a batch for visualizing the model output after fixed intervals
     for e in range(epochs):
         loss_meter_dict = create_loss_meters() # function returing a dictionary of objects to 
@@ -20,19 +20,18 @@ def train_model(model, train_dl, epochs, display_every=200):
                 print(f"\nEpoch {e+1}/{epochs}")
                 print(f"Iteration {i}/{len(train_dl)}")
                 log_results(loss_meter_dict) # function to print out the losses
-                visualize(model, data, save=True) # function displaying the model's outputs
+                visualize(model, data, save=True, visualize_dir) # function displaying the model's outputs
 
 
 if __name__ == '__main__':
-    ap = argparse.ArgumentParser()
-    ap.add_argument('-i', '--path', required=True, help='path to image dir')
-    args = vars(ap.parse_args())
+#     ap = argparse.ArgumentParser()
+#     ap.add_argument('-i', '--path', required=False, help='path to image dir')
+#     args = vars(ap.parse_args())
 
     coco_path = untar_data(URLs.COCO_SAMPLE)
     coco_path = str(coco_path) + "/train_sample"
     
-    
-    paths = glob.glob(args['path'] + "/*.jpg") # Grabbing all the image file names
+    paths = glob.glob(coco_path + "/*.jpg") # Grabbing all the image file names
     np.random.seed(123)
     paths_subset = np.random.choice(paths, 10_000, replace=False) # choosing 1000 images randomly
     rand_idxs = np.random.permutation(10_000)
@@ -46,4 +45,7 @@ if __name__ == '__main__':
     
     model = MainModel()
     
-    train_model(model, train_dl, 100)
+    samples_dir = f'samples_{time.time()}'
+    os.mkdir(samples_dir)
+        
+    train_model(model, train_dl, 100, visualize_dir=samples_dir)

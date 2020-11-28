@@ -1,6 +1,8 @@
 import torch
 from skimage.color import lab2rgb
 import matplotlib.pyplot as plt
+import numpy as np
+import time
 
 class AverageMeter:
     def __init__(self):
@@ -48,7 +50,7 @@ def lab_to_rgb(L, ab):
         rgb_imgs.append(img_rgb)
     return np.stack(rgb_imgs, axis=0)
     
-def visualize(model, data, save=True):
+def visualize(model, data, save=True, outdir):
     model.net_G.eval()
     with torch.no_grad():
         model.setup_input(data)
@@ -72,7 +74,7 @@ def visualize(model, data, save=True):
         ax.axis("off")
     plt.show()
     if save:
-        fig.savefig(f"colorization_{time.time()}.png")
+        fig.savefig(f"{outdir}/colorization_{time.time()}.png")
         
 def log_results(loss_meter_dict):
     for loss_name, loss_meter in loss_meter_dict.items():
