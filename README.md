@@ -8,4 +8,4 @@ Sampled 10000 COCO images for training
 
 Sample output after training:
 
-![baseline sample](samples/colorization_1606592237.921929.png "Baseline sample")
+![baseline sample](images/colorization_1606592237.921929.png "Baseline sample")
