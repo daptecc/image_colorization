@@ -50,7 +50,7 @@ def lab_to_rgb(L, ab):
         rgb_imgs.append(img_rgb)
     return np.stack(rgb_imgs, axis=0)
     
-def visualize(model, data, save=True, outdir):
+def visualize(model, data, save=True, outdir='samples'):
     model.net_G.eval()
     with torch.no_grad():
         model.setup_input(data)
