@@ -9,6 +9,17 @@ from funet import build_res_unet
 from utils import create_loss_meters, update_losses, visualize, log_results
 
 def train_model(model, train_dl, epochs, display_every=200, visualize_dir='samples'):
+    '''
+    Train loop
+    
+    Args:
+      model (nn.Module): main model consisting of generator that predicts ab features from L input of L*a*b* image and a discriminator that predicts whether the reconstructed L*a*b* image is real or fake
+      train_dl (Dataloader): train dataloader of sampled COCO images
+      epochs (int): number of epochs
+      display_every (int): saves reconstructed predicted L*a*b* image every number of iterations
+      visualize_dir (str): directory where saved images are written to
+    '''
+    
     data = next(iter(val_dl)) # getting a batch for visualizing the model output after fixed intervals
     for e in range(epochs):
         loss_meter_dict = create_loss_meters() # function returing a dictionary of objects to 
@@ -25,13 +36,14 @@ def train_model(model, train_dl, epochs, display_every=200, visualize_dir='sampl
                 visualize(model, data, save=True, outdir=visualize_dir) # function displaying the model's outputs
 
 
-if __name__ == '__main__':
-    ap = argparse.ArgumentParser()
-#     ap.add_argument('-i', '--path', required=False, help='path to image dir')
-    ap.add_argument('-g', '--generator', required=False, help='path to pretrained generator')
-    ap.add_argument('-e', '--epochs', required=True, type=int, default=100, help='number of epochs')
-    args = vars(ap.parse_args())
-
+def get_paths():
+    '''
+    Download sample of COCO dataset
+    Sample 10k images from COCO dataset
+    Split train/val 80/20
+    Return:
+    train_paths (list), val_paths (list): image paths
+    '''
     coco_path = untar_data(URLs.COCO_SAMPLE)
     coco_path = str(coco_path) + "/train_sample"
     
@@ -41,9 +53,17 @@ if __name__ == '__main__':
     rand_idxs = np.random.permutation(10_000)
     train_idxs = rand_idxs[:8000] # choosing the first 8000 as training set
     val_idxs = rand_idxs[8000:] # choosing last 2000 as validation set
-    train_paths = paths_subset[train_idxs]
-    val_paths = paths_subset[val_idxs]
+    return paths_subset[train_idxs], paths_subset[val_idxs]
+                
+    
+if __name__ == '__main__':
+    ap = argparse.ArgumentParser(description='Colorization of images from COCO dataset')
+#     ap.add_argument('-i', '--path', required=False, help='path to image dir')
+    ap.add_argument('-g', '--generator', required=False, help='path to pretrained generator')
+    ap.add_argument('-e', '--epochs', required=True, type=int, default=100, help='number of epochs')
+    args = vars(ap.parse_args())
 
+    train_paths, val_paths = get_paths()
     train_dl = make_dataloaders(paths=train_paths, split='train')
     val_dl = make_dataloaders(paths=val_paths, split='val')
 

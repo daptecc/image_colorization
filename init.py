@@ -1,6 +1,16 @@
 from torch import nn
 
 def init_weights(net, init='norm', gain=0.02):
+    '''
+    Initializes conv layer and batchnorm weights of the model
+    
+    Args:
+      init (str): option to initial weights using normal, xavier, or kaiming initialization for conv layers
+      gain (float): value for normal initialization of batchnorm weights
+      
+    Returns:
+      model with initialized weights
+    '''
     
     def init_func(m):
         classname = m.__class__.__name__
@@ -23,6 +33,9 @@ def init_weights(net, init='norm', gain=0.02):
     return net
 
 def init_model(model, device):
+    '''
+    Initalizes the weights of the model
+    '''
     model = model.to(device)
     model = init_weights(model)
     return model

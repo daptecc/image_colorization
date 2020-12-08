@@ -6,8 +6,23 @@ from discriminator import PatchDiscriminator
 from unet import Unet
 
 class MainModel(nn.Module):
+    '''
+    Main model consisting of generator that predicts ab features from L input of L*a*b* image and a discriminator that predicts whether the reconstructed L*a*b* image is real or fake
+    '''
+    
     def __init__(self, net_G=None, lr_G=2e-4, lr_D=2e-4, 
                  beta1=0.5, beta2=0.999, lambda_L1=100.):
+        '''
+        Instantiates generator, generator loss, L1 loss, discriminator, discriminator loss, and optimizers for both the generator and discriminator
+        
+        Args:
+          net_G (nn.Module): optional generator if using pretrained architectures
+          lr_G (float): generator learning rate
+          lr_D (float): discriminator learning rate
+          beta1 (float): Adam optimizer coefficient used for computing running averages of gradient and its square
+          beta2 (float): Adam optimizer coefficient used for computing running averages of gradient and its square
+          lambda_L1 (float): regularization parameter for L1 loss added to the generator loss
+        '''
         super().__init__()
         
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -24,17 +39,40 @@ class MainModel(nn.Module):
         self.opt_D = optim.Adam(self.net_D.parameters(), lr=lr_D, betas=(beta1, beta2))
     
     def set_requires_grad(self, model, requires_grad=True):
+        '''
+        Sets the parameters of the model to require gradient calculation
+        '''
+        
         for p in model.parameters():
             p.requires_grad = requires_grad
         
     def setup_input(self, data):
+        '''
+        Puts the data on GPU if available
+        '''
+        
         self.L = data['L'].to(self.device)
         self.ab = data['ab'].to(self.device)
         
     def forward(self):
+        '''
+        Generator predicts ab features from L features of L*a*b* images
+        '''
         self.fake_color = self.net_G(self.L)
     
     def backward_D(self):
+        '''
+        Backward pass for the disciminator 
+        
+        Predicted L*a*b* image is reconstructed from predicted ab features and real L input features
+        Predicted image is fed into discriminator to get fake prediction
+        Discriminator loss for fake image is computed by comparing fake prediction to fake labels
+        Real L*a*b* image is reconstructed from real ab features and real L input features
+        Real image is fed into discriminator to get real prediction
+        Discriminator loss for real image is computed by comparing real prediction to real labels
+        Final discriminator loss is computed by taking the average of real and fake discriminator losses
+        '''
+        
         fake_image = torch.cat([self.L, self.fake_color], dim=1)
         fake_preds = self.net_D(fake_image.detach())
         self.loss_D_fake = self.GANcriterion(fake_preds, False)
@@ -45,6 +83,16 @@ class MainModel(nn.Module):
         self.loss_D.backward()
     
     def backward_G(self):
+        '''
+        Backward pass for the generator
+        
+        Predicted L*a*b* image is reconstructed from predicted ab features and real L input features
+        Predicted image is fed into discriminator to get fake prediction
+        Generator loss for fake image is computed by comparing fake prediction to real labels
+        L1 loss computed for predicted ab features and real ab features, with regularization
+        Final generator loss is the sum of generator loss and L1 loss
+        '''
+        
         fake_image = torch.cat([self.L, self.fake_color], dim=1)
         fake_preds = self.net_D(fake_image)
         self.loss_G_GAN = self.GANcriterion(fake_preds, True)
@@ -53,6 +101,10 @@ class MainModel(nn.Module):
         self.loss_G.backward()
     
     def optimize(self):
+        '''
+        Perform one step of forward/backward passes for generator and discriminator
+        '''
+        
         self.forward()
         self.net_D.train()
         self.set_requires_grad(self.net_D, True)
