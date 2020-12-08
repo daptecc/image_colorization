@@ -6,6 +6,10 @@ from skimage.color import rgb2lab, lab2rgb
 
 SIZE = 256
 class ColorizationDataset(Dataset):
+    '''
+    Preprocesses image data into L features and ab features for image in L*a*b* color space
+    '''
+    
     def __init__(self, paths, split='train'):
         if split == 'train':
             self.transforms = transforms.Compose([
@@ -20,6 +24,18 @@ class ColorizationDataset(Dataset):
         self.paths = paths
     
     def __getitem__(self, idx):
+        '''
+        Fetches image path at idx
+        Converts image to RGB order
+        Apply transforms. If training, apply random horizontal flip
+        Convert RGB to L*a*b* color space
+        Split image to L features ab features
+        
+        Returns:
+          L*a*b* dict object:
+            L (h,w,1): Image features in L color space
+            ab (h,w,2): Image features in ab color space
+        '''
         img = Image.open(self.paths[idx]).convert("RGB")
         img = self.transforms(img)
         img = np.array(img)
@@ -33,7 +49,11 @@ class ColorizationDataset(Dataset):
     def __len__(self):
         return len(self.paths)
 
-def make_dataloaders(batch_size=16, n_workers=4, pin_memory=True, **kwargs): # A handy function to make our dataloaders
+def make_dataloaders(batch_size=16, n_workers=4, pin_memory=True, **kwargs):
+    '''
+    A handy function to make our dataloaders
+    '''
+    
     dataset = ColorizationDataset(**kwargs)
     dataloader = DataLoader(dataset, batch_size=batch_size, num_workers=n_workers,
                             pin_memory=pin_memory)

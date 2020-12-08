@@ -4,6 +4,19 @@ from torch import nn
 class UnetBlock(nn.Module):
     def __init__(self, nf, ni, submodule=None, input_c=None, dropout=False,
                  innermost=False, outermost=False):
+        '''
+        Creates an downsampling/upsampling block for Unet architecture
+        
+        Args:
+          nf (int): input filter dimension if input_c is None
+          ni (int): output filter dimension
+          submodule (nn.Module): Unet block to add downsampling/upsampling layers to
+          input_c (int): optional input filter dimension
+          dropout (bool): optional addition of dropout layer to block
+          innermost (bool): whether the block is the initial (middle) block
+          outermost (bool): whether the block is the input/output layers 
+        '''
+        
         super().__init__()
         self.outermost = outermost
         if input_c is None: input_c = nf
@@ -42,10 +55,27 @@ class UnetBlock(nn.Module):
             return torch.cat([x, self.model(x)], 1)
 
 class Unet(nn.Module):
-    def __init__(self, input_c=1, output_c=2, n_down=8, num_filters=64):
+    '''
+    Creates Unet architecture by starting with the middle block and progressively adding sets of downsampling/upsampling blocks to both sides
+    '''
+    
+    def __init__(self, input_c=1, output_c=2, n_down=3, num_filters=64):
+        '''
+        Creates an inner most (middle) Unet block
+        Adds a number of downsampling/upsampling layers to both sides of inner most block with the same number of filters
+        Then adds a number of downsampling/upsampling layers with decreasing number of filters
+        Then adds a last downsampling/upsampling layer with input and output dimensions
+        
+        Arguments:
+          input_c (int): corresponding to the L feature dimension of L*a*b* images
+          output_c (int): corresponding to the ab feature dimensions of L*a*b* images
+          n_down (int): number of times to add upsampling/downsampling blocks to inner most block
+          num_filters (int): number of filters to start the inner most block
+        '''
+        
         super().__init__()
         unet_block = UnetBlock(num_filters * 8, num_filters * 8, innermost=True)
-        for _ in range(n_down - 5):
+        for _ in range(n_down):
             unet_block = UnetBlock(num_filters * 8, num_filters * 8, submodule=unet_block, dropout=True)
         out_filters = num_filters * 8
         for _ in range(3):

@@ -9,6 +9,17 @@ from colorization_dataset import make_dataloaders
 from utils import AverageMeter
 
 def pretrain_generator(net_G, train_dl, opt, criterion, epochs):
+    '''
+    Pretrain the generator using the L1 loss between predicted and read ab features of images in L*a*b* color space
+    
+    Args:
+      net_G (nn.Module): generator that predicts ab features from L input of L*a*b* image
+      train_dl (Dataloader): train dataloader of sampled COCO images
+      opt (nn.optim): default is Adam optimizer
+      criterion (nn.L1Loss): default is L1 loss
+      epochs (int): number of epochs
+    '''
+    
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     for e in range(epochs):
@@ -27,8 +38,14 @@ def pretrain_generator(net_G, train_dl, opt, criterion, epochs):
         print(f"L1 Loss: {loss_meter.avg:.5f}")
 
 
-if __name__ == '__main__':
-    
+def get_paths():
+    '''
+    Download sample of COCO dataset
+    Sample 10k images from COCO dataset
+    Split train/val 80/20
+    Return:
+    train_paths (list), val_paths (list): image paths
+    '''
     coco_path = untar_data(URLs.COCO_SAMPLE)
     coco_path = str(coco_path) + "/train_sample"
     
@@ -38,9 +55,11 @@ if __name__ == '__main__':
     rand_idxs = np.random.permutation(10_000)
     train_idxs = rand_idxs[:8000] # choosing the first 8000 as training set
     val_idxs = rand_idxs[8000:] # choosing last 2000 as validation set
-    train_paths = paths_subset[train_idxs]
-    val_paths = paths_subset[val_idxs]
+    return paths_subset[train_idxs], paths_subset[val_idxs]
 
+if __name__ == '__main__':
+    
+    train_paths, val_paths = get_paths()
     train_dl = make_dataloaders(paths=train_paths, split='train')
     val_dl = make_dataloaders(paths=val_paths, split='val')
     
