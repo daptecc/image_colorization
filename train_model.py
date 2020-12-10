@@ -7,6 +7,7 @@ from main_model import MainModel
 from colorization_dataset import make_dataloaders
 from funet import build_res_unet
 from utils import create_loss_meters, update_losses, visualize, log_results
+import pickle
 
 def train_model(model, train_dl, epochs, display_every=200, visualize_dir='samples'):
     '''
@@ -37,6 +38,9 @@ def train_model(model, train_dl, epochs, display_every=200, visualize_dir='sampl
     
     # save model
     torch.save(model.state_dict(), 'colorization_model.pt')
+    
+    # serialize model
+    pickle.dump(model, open('colorization_model.pkl', 'wb'))
     
 
 def get_paths():
