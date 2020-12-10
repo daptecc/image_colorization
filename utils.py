@@ -1,5 +1,7 @@
 import torch
-from skimage.color import lab2rgb
+from torchvision import transforms
+from skimage.color import rgb2lab, lab2rgb
+from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
 import time
@@ -80,12 +82,12 @@ def log_results(loss_meter_dict):
     for loss_name, loss_meter in loss_meter_dict.items():
         print(f"{loss_name}: {loss_meter.avg:.5f}")
 
-def PIL_image_to_model_input(pil_img):
-    img = np.array(pil_img)
-    img_lab = rgb2lab(img).astype("float32") # Converting RGB to L*a*b
-    img_lab = transforms.ToTensor()(img_lab)
-    L = img_lab[[0], ...] / 50. - 1. # Between -1 and 1
+def PIL_image_to_model_input(img):
+    SIZE = 256
+    img = img.convert("RGB")
+    img = transforms.Resize((SIZE, SIZE),  Image.BICUBIC)(img)
+    img = np.array(img)
+    img = rgb2lab(img).astype("float32") # Converting RGB to L*a*b
+    img = transforms.ToTensor()(img)
+    L = img[[0], ...] / 50. - 1. # Between -1 and 1
     return L
-
-def reconstruct_image(L, ab):
-    pass
