@@ -34,7 +34,10 @@ def train_model(model, train_dl, epochs, display_every=200, visualize_dir='sampl
                 print(f"Iteration {i}/{len(train_dl)}")
                 log_results(loss_meter_dict) # function to print out the losses
                 visualize(model, data, save=True, outdir=visualize_dir) # function displaying the model's outputs
-
+    
+    # save model
+    torch.save(model.state_dict(), 'colorization_model.pt')
+    
 
 def get_paths():
     '''
@@ -60,7 +63,7 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser(description='Colorization of images from COCO dataset')
 #     ap.add_argument('-i', '--path', required=False, help='path to image dir')
     ap.add_argument('-g', '--generator', required=False, help='path to pretrained generator')
-    ap.add_argument('-e', '--epochs', required=True, type=int, default=100, help='number of epochs')
+    ap.add_argument('-e', '--epochs', required=False, type=int, default=100, help='number of epochs')
     args = vars(ap.parse_args())
 
     train_paths, val_paths = get_paths()

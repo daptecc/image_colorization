@@ -79,3 +79,13 @@ def visualize(model, data, save=True, outdir='samples'):
 def log_results(loss_meter_dict):
     for loss_name, loss_meter in loss_meter_dict.items():
         print(f"{loss_name}: {loss_meter.avg:.5f}")
+
+def PIL_image_to_model_input(pil_img):
+    img = np.array(pil_img)
+    img_lab = rgb2lab(img).astype("float32") # Converting RGB to L*a*b
+    img_lab = transforms.ToTensor()(img_lab)
+    L = img_lab[[0], ...] / 50. - 1. # Between -1 and 1
+    return L
+
+def reconstruct_image(L, ab):
+    pass
