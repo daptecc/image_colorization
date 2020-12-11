@@ -90,4 +90,7 @@ def PIL_image_to_model_input(img):
     img = rgb2lab(img).astype("float32") # Converting RGB to L*a*b
     img = transforms.ToTensor()(img)
     L = img[[0], ...] / 50. - 1. # Between -1 and 1
-    return L
+    ab = img[[1, 2], ...] / 110. # Between -1 and 1
+    L = torch.unsqueeze(L, 0)
+    ab = torch.unsqueeze(ab, 0)
+    return {'L': L, 'ab': ab}
